@@ -1,0 +1,2 @@
+ext_kolide_fleet_tmp_volume: /var/lib/docker-extvols/kolide-fleet/tmp
+ext_kolide_fleet_cert_volume: /var/lib/docker-extvols/kolide-fleet/certs

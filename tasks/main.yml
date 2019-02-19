@@ -1,0 +1,49 @@
+- name: create ext volume for tmp
+  file: state=directory path={{ ext_kolide_fleet_tmp_volume }} mode=1777
+
+- name: create ext volume for certs
+  file: state=directory path={{ ext_kolide_fleet_cert_volume }} mode=0750
+
+- name: copy a server cert
+  copy: remote_src=yes src=/etc/ssl/certs/ssl-cert-snakeoil.pem dest={{ ext_kolide_fleet_cert_volume }}/server.cert
+
+- name: copy a server key
+  copy: remote_src=yes src=/etc/ssl/private/ssl-cert-snakeoil.key dest={{ ext_kolide_fleet_cert_volume }}/server.key
+
+- name: prepare a Kollide Fleet DB
+  docker_container:
+    name: kollide-fleet-prepare-db
+    image: kolide/fleet
+    read_only: yes
+    env:
+      KOLIDE_MYSQL_ADDRESS: "{{ kolide_fleet_mysql_address }}"
+      KOLIDE_MYSQL_DATABASE: "{{ kolide_fleet_mysql_database }}"
+      KOLIDE_MYSQL_USERNAME: "{{ kolide_fleet_mysql_user }}"
+      KOLIDE_MYSQL_PASSWORD: "{{ kolide_fleet_mysql_password }}"
+      KOLIDE_REDIS_ADDRESS: "{{ kolide_fleet_redis_address }}"
+    command: fleet prepare db
+
+- name: start a Kollide Fleet container
+  docker_container:
+    name: kollide-fleet
+    image: kolide/fleet
+    state: started
+    recreate: yes
+    restart_policy: always
+    read_only: yes
+    exposed_ports:
+      - 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - "{{ ext_kolide_fleet_tmp_volume }}:/tmp"
+      - "{{ ext_kolide_fleet_cert_volume }}:/certs"
+    env:
+      KOLIDE_MYSQL_ADDRESS: "{{ kolide_fleet_mysql_address }}"
+      KOLIDE_MYSQL_DATABASE: "{{ kolide_fleet_mysql_database }}"
+      KOLIDE_MYSQL_USERNAME: "{{ kolide_fleet_mysql_user }}"
+      KOLIDE_MYSQL_PASSWORD: "{{ kolide_fleet_mysql_password }}"
+      KOLIDE_REDIS_ADDRESS: "{{ kolide_fleet_redis_address }}"
+      KOLIDE_AUTH_JWT_KEY: "{{ kolide_fleet_auth_jwt_key }}"
+      KOLIDE_SERVER_CERT: "/certs/server.cert"
+      KOLIDE_SERVER_KEY: "/certs/server.key"
