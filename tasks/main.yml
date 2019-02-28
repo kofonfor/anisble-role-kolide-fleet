@@ -47,3 +47,24 @@
       KOLIDE_AUTH_JWT_KEY: "{{ kolide_fleet_auth_jwt_key }}"
       KOLIDE_SERVER_CERT: "/certs/server.cert"
       KOLIDE_SERVER_KEY: "/certs/server.key"
+
+- name: download fleetctl
+  get_url: url="https://github.com/kolide/fleet/releases/download/2.0.2/fleet_2.0.2.zip" dest=/root/fleet.zip
+
+- name: make /opt/fleet
+  file: dest=/opt/fleet state=directory
+
+- name: unpack fleet
+  unarchive: copy=no src="/root/fleet.zip" dest=/opt/fleet
+
+- name: create a link
+  file: src=/opt/fleet/linux/fleetctl dest=/usr/local/bin/fleetctl state=link
+
+- name: set fleet address
+  command: /usr/local/bin/fleetctl config set --address https://127.0.0.1:8080
+
+- name: skip TLS verification
+  command: /usr/local/bin/fleetctl config set --tls-skip-verify true
+
+- name: setup fleet params
+  command: /usr/local/bin/fleetctl setup --email {{ kolide_fleet_email }} --password '{{ kolide_fleet_password }}' --org-name "{{ kolide_fleet_orgname }}"
