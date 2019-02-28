@@ -10,9 +10,9 @@
 - name: copy a server key
   copy: remote_src=yes src=/etc/ssl/private/ssl-cert-snakeoil.key dest={{ ext_kolide_fleet_cert_volume }}/server.key
 
-- name: prepare a Kollide Fleet DB
+- name: prepare a Kolide Fleet DB
   docker_container:
-    name: kollide-fleet-prepare-db
+    name: kolide-fleet-prepare-db
     image: kolide/fleet
     read_only: yes
     env:
@@ -23,9 +23,9 @@
       KOLIDE_REDIS_ADDRESS: "{{ kolide_fleet_redis_address }}"
     command: fleet prepare db
 
-- name: start a Kollide Fleet container
+- name: start a Kolide Fleet container
   docker_container:
-    name: kollide-fleet
+    name: kolide-fleet
     image: kolide/fleet
     state: started
     recreate: yes
