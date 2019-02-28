@@ -68,3 +68,8 @@
 
 - name: setup fleet params
   command: /usr/local/bin/fleetctl setup --email {{ kolide_fleet_email }} --password '{{ kolide_fleet_password }}' --org-name "{{ kolide_fleet_orgname }}"
+  register: result
+  failed_when: result.rc == 1 and result.stderr != "Kolide Fleet has already been setup"
+
+- name: set the enroll secret
+  command: mysql -e 'update app_configs set osquery_enroll_secret = "{{ kolide_fleet_enroll_secret }}" where id=1;' --batch -h 127.0.0.1 -u {{ docker_mysql_user }} -p{{ docker_mysql_password }} {{ docker_mysql_database }}
